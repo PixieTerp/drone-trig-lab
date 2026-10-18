@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>[hidden]{display:none!important}body{margin:0}</style>
+<title>Drone Trig Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: a field-view "flight deck" — the parking-lot scene on top, a control console underneath, two mission tabs. */
+:root {
+  --bg: #eef3f7;
+  --panel: #ffffff;
+  --ink: #18242f;
+  --muted: #566573;
+  --line: #d3dde6;
+  --sky-top: #bfe0f5;
+  --sky-bot: #eaf5fc;
+  --asphalt: #3b4148;
+  --asphalt-ink: #e9edf0;
+  --stripe: #f2c230;
+  --cone: #f26b1d;
+  --hyp: #6b4fd8;
+  --box: #c8955a;
+  --tape: #8a5a2b;
+  --box-ink: #8a5a2b;
+  --chalk: #f4f6f8;
+  --opp: #0b7f8c;
+  --adj: #c4520c;
+  --hud: #0b7f8c;
+  --hud-soft: #d8f0f2;
+  --good: #1d8a4e;
+  --good-soft: #e1f4e8;
+  --warn: #b65c00;
+  --warn-soft: #fdf0e1;
+  --drone: #26323d;
+  --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11171d; --panel: #1a222a; --ink: #e6edf3; --muted: #9aa8b5; --line: #2c3742;
+    --sky-top: #1b3a55; --sky-bot: #2a4c66; --asphalt: #262b31; --asphalt-ink: #c9d1d8;
+    --stripe: #d9aa1e; --cone: #ff8240; --hyp: #a993ff; --opp: #4fd0dc; --adj: #ff9a5c; --hud: #4fd0dc; --hud-soft: #133338;
+    --box: #d6a46a; --tape: #8f5e2f; --box-ink: #e6b980; --chalk: #dfe4e8;
+    --good: #5fd08f; --good-soft: #143222; --warn: #ffb064; --warn-soft: #3a2614; --drone: #d5dde5;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11171d; --panel: #1a222a; --ink: #e6edf3; --muted: #9aa8b5; --line: #2c3742;
+  --sky-top: #1b3a55; --sky-bot: #2a4c66; --asphalt: #262b31; --asphalt-ink: #c9d1d8;
+  --stripe: #d9aa1e; --cone: #ff8240; --hyp: #a993ff; --opp: #4fd0dc; --adj: #ff9a5c; --hud: #4fd0dc; --hud-soft: #133338;
+  --box: #d6a46a; --tape: #8f5e2f; --box-ink: #e6b980; --chalk: #dfe4e8;
+  --good: #5fd08f; --good-soft: #143222; --warn: #ffb064; --warn-soft: #3a2614; --drone: #d5dde5;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 16px; }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 4vw, 36px); margin: 0; letter-spacing: .01em; text-wrap: balance; }
+.sub { color: var(--muted); margin: 2px 0 0; }
+.badge { font-family: var(--display); font-weight: 600; font-size: 14px; background: var(--hud-soft); color: var(--hud); padding: 6px 12px; border-radius: 999px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.tab {
+  font-family: var(--display); font-weight: 600; font-size: 16px; padding: 10px 16px; border-radius: 10px;
+  border: 2px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer;
+}
+.tab[aria-selected="true"] { border-color: var(--hud); background: var(--hud-soft); color: var(--hud); }
+.tab:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--hud); outline-offset: 2px; }
+.scene { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.scene svg { display: block; width: 100%; height: auto; }
+.console[hidden] { display: none; }
+.console { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .console { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.card h2 { font-family: var(--display); font-size: 18px; margin: 0; font-weight: 700; }
+.label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+.readouts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+#m1 .readouts { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.35fr); }
+.readout { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.readout .val { font-family: var(--display); font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.readout.hi { border-color: var(--hud); background: var(--hud-soft); }
+.readout.hi .val { color: var(--hud); }
+.lock { font-size: 13px; font-weight: 700; color: var(--warn); }
+.lock.on { color: var(--good); }
+.eyein { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-weight: 700; color: var(--muted); }
+.eyein input { width: 42px; font: 600 17px var(--display); padding: 4px 4px; border-radius: 6px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); font-variant-numeric: tabular-nums; }
+.slider-row { display: grid; gap: 4px; }
+input[type="range"] { width: 100%; accent-color: var(--hud); }
+.answer { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.answer label { font-weight: 700; }
+.answer input {
+  font: 600 18px var(--display); width: 120px; padding: 8px 10px; border-radius: 8px;
+  border: 2px solid var(--line); background: var(--bg); color: var(--ink); font-variant-numeric: tabular-nums;
+}
+.unit { color: var(--muted); }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+button.primary, button.ghost {
+  font: 600 16px var(--display); padding: 10px 16px; border-radius: 10px; cursor: pointer; border: 2px solid var(--hud);
+}
+button.primary { background: var(--hud); color: var(--panel); }
+button.ghost { background: transparent; color: var(--hud); }
+.feedback { border-radius: 10px; padding: 10px 12px; font-size: 15px; }
+.feedback:empty { display: none; }
+.feedback.good { background: var(--good-soft); color: var(--good); }
+.feedback.warn { background: var(--warn-soft); color: var(--warn); }
+.feedback b { font-weight: 700; }
+.steps { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.hint { background: var(--bg); border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; font-family: var(--display); font-size: 16px; }
+.note { color: var(--muted); font-size: 14px; margin: 0; }
+.choices { border: 0; margin: 0; padding: 0; display: grid; gap: 6px; }
+.choices legend { margin-bottom: 6px; padding: 0; }
+.choice { display: flex; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; cursor: pointer; font-family: var(--display); font-size: 16px; }
+.choice:has(input:checked) { border-color: var(--hud); background: var(--hud-soft); }
+.choice input { accent-color: var(--hud); width: 18px; height: 18px; }
+.answer input.wide { width: 220px; font-family: var(--body); font-size: 16px; }
+.linkbtn { display: inline-block; justify-self: start; font: 600 16px var(--display); padding: 10px 16px; border-radius: 10px; border: 2px solid var(--hud); color: var(--hud); text-decoration: none; }
+.linkbtn.green { background: var(--good); border-color: var(--good); color: var(--panel); }
+.linkbtn:focus-visible { outline: 3px solid var(--hud); outline-offset: 2px; }
+code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+.report { grid-column: 1 / -1; border: 2px solid var(--hud); }
+.report pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 600 15px/1.6 ui-monospace, Menlo, Consolas, monospace; background: var(--bg); border-radius: 10px; padding: 12px 14px; }
+.banner { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-radius: 14px; border: 2px solid var(--warn); background: var(--warn-soft); color: var(--ink); font-size: 16px; }
+.banner b { color: var(--warn); }
+.banner > div { flex: 1 1 280px; min-width: 0; }
+.banner[hidden], .card[hidden], .m0[hidden], .scene[hidden] { display: none; }
+.banner.big { font-size: 17px; border-width: 3px; }
+.banner.big b { font-size: 19px; }
+.banner.goodb { border-color: var(--good); background: var(--good-soft); }
+.banner.goodb b { color: var(--good); }
+.saved { border-radius: 10px; padding: 8px 12px; background: var(--hud-soft); color: var(--hud); font-size: 14px; }
+.m0 { display: grid; gap: 16px; }
+.m0 p { margin: 0; max-width: 68ch; }
+.tri-wrap { overflow-x: auto; }
+.tri { display: block; width: 100%; max-width: 560px; height: auto; margin: 0 auto; }
+.tri .side { stroke-width: 6; stroke-linecap: round; transition: stroke-width .2s, opacity .2s; }
+.tri.focus .side { opacity: .25; }
+.tri.focus .side.on { opacity: 1; stroke-width: 11; }
+.tlab { font: 700 20px var(--display); }
+.tsm { font: 600 14px var(--display); }
+.sidebtns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 720px) { .sidebtns { grid-template-columns: 1fr; } }
+.sidebtn { text-align: left; display: grid; gap: 4px; padding: 12px 14px; border-radius: 12px; background: var(--panel); color: var(--ink); border: 2px solid var(--line); border-left-width: 8px; cursor: pointer; font: 15px/1.45 var(--body); }
+.sidebtn b { font: 700 18px var(--display); }
+.sidebtn.hyp { border-left-color: var(--hyp); } .sidebtn.hyp b { color: var(--hyp); }
+.sidebtn.opp { border-left-color: var(--opp); } .sidebtn.opp b { color: var(--opp); }
+.sidebtn.adj { border-left-color: var(--adj); } .sidebtn.adj b { color: var(--adj); }
+.sidebtn[aria-pressed="true"] { background: var(--bg); border-top-color: currentColor; }
+.sidebtn:focus-visible { outline: 3px solid var(--hud); outline-offset: 2px; }
+.c-opp { color: var(--opp); font-weight: 700; } .c-adj { color: var(--adj); font-weight: 700; } .c-hyp { color: var(--hyp); font-weight: 700; }
+.soh { display: grid; gap: 8px; }
+.soh > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 14px; font-size: 18px; }
+.soh .big { font: 700 30px var(--display); letter-spacing: .06em; min-width: 82px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .two { grid-template-columns: 1fr; } }
+.sec { border-width: 2px; }
+.sec-tag { justify-self: start; font: 700 13px var(--display); text-transform: uppercase; letter-spacing: .1em; color: var(--hud); background: var(--hud-soft); padding: 3px 10px; border-radius: 999px; }
+.sec h2 { font-size: 22px; }
+.flist { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.flist li { font: 600 18px var(--display); background: var(--bg); border-radius: 8px; padding: 8px 12px; }
+.example { background: var(--good-soft); border-radius: 10px; padding: 10px 12px; font-size: 15px; }
+.big-steps { font-size: 17px; }
+.rotor { transform-box: fill-box; transform-origin: center; animation: spin .25s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .rotor { animation: none; } .ray { transition: none !important; } }
+.ray { transition: stroke-dashoffset .9s ease-out; }
+</style>
+
+</head><body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Drone Trig Lab</h1>
+      <p class="sub">Ms. K's flight deck. Calculator in <b>DEG</b> mode, please.</p>
+    </div>
+    <span class="badge" id="score">Missions completed: 0</span>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Missions">
+    <button class="tab" role="tab" id="tab0" aria-selected="false" aria-controls="m0">Mission 0: Trig basics</button>
+    <button class="tab" role="tab" id="tab1" aria-selected="true" aria-controls="m1">Mission 1: How high?</button>
+    <button class="tab" role="tab" id="tab2" aria-selected="false" aria-controls="m2">Mission 2: Aim + SUBMIT</button>
+  </div>
+
+  <div class="m0" id="m0" role="tabpanel" aria-labelledby="tab0" hidden>
+    <div class="card">
+      <h2>Meet the right triangle</h2>
+      <p>The drone, the delivery box and the person make a <b>right triangle</b>: one corner is a perfect square corner (90°). Each side has a name. The names depend on where the angle <b>θ</b> (say "theta") is.</p>
+      <div class="tri-wrap">
+        <svg viewBox="0 0 560 300" class="tri" role="img" aria-label="Right triangle with the angle theta at the person, opposite side up the drone, adjacent side along the ground, hypotenuse as the line of sight">
+          <line id="sideAdj" class="side" x1="60" y1="250" x2="440" y2="250" stroke="var(--adj)"/>
+          <line id="sideOpp" class="side" x1="440" y1="250" x2="440" y2="50" stroke="var(--opp)"/>
+          <line id="sideHyp" class="side" x1="60" y1="250" x2="440" y2="50" stroke="var(--hyp)"/>
+          <line x1="60" y1="50" x2="440" y2="50" stroke="var(--muted)" stroke-width="2" stroke-dasharray="6 6"/>
+          <line x1="60" y1="250" x2="60" y2="50" stroke="var(--muted)" stroke-width="2" stroke-dasharray="6 6"/>
+          <rect x="60" y="50" width="14" height="14" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="3 3"/>
+          <path d="M380 50 A60 60 0 0 0 386.9 77.9" fill="none" stroke="var(--ink)" stroke-width="3"/>
+          <text x="356" y="74" class="tlab" fill="var(--ink)">θ</text>
+          <text x="250" y="40" class="tsm" text-anchor="middle" fill="var(--muted)">flat line, like the ground</text>
+          <rect x="420" y="230" width="20" height="20" fill="none" stroke="var(--ink)" stroke-width="2"/>
+          <path d="M120 250 A60 60 0 0 0 113.1 222.1" fill="none" stroke="var(--ink)" stroke-width="3"/>
+          <text x="128" y="238" class="tlab" fill="var(--ink)">θ</text>
+          <text x="250" y="282" class="tlab" text-anchor="middle" fill="var(--adj)">adjacent</text>
+          <text x="455" y="155" class="tlab" fill="var(--opp)">opposite</text>
+          <text x="215" y="132" class="tlab" text-anchor="middle" fill="var(--hyp)" transform="rotate(-27.8 215 132)">hypotenuse</text>
+          <text x="448" y="40" class="tsm" text-anchor="start" fill="var(--muted)">drone</text>
+          <text x="440" y="275" class="tsm" text-anchor="start" dx="8" fill="var(--muted)">delivery box</text>
+          <text x="60" y="275" class="tsm" text-anchor="middle" fill="var(--muted)">you</text>
+        </svg>
+      </div>
+      <p class="note"><b>Why the dashed lines?</b> They turn the triangle into a rectangle. The top dashed line is flat, just like the ground. So the drone looks <b>down</b> at the same angle θ that you look <b>up</b>. Mission 2 calls this the <b>angle of depression</b>.</p>
+      <p class="note">Tap a side name to light it up.</p>
+      <div class="sidebtns">
+        <button class="sidebtn hyp" data-side="Hyp"><b>Hypotenuse</b><span>The longest side. It is across from the square corner. For the drone, it is your line of sight.</span></button>
+        <button class="sidebtn opp" data-side="Opp"><b>Opposite</b><span>Across from the angle θ. It does not touch θ. For the drone, it is the height.</span></button>
+        <button class="sidebtn adj" data-side="Adj"><b>Adjacent</b><span>Next to the angle θ. It touches θ, but it is not the hypotenuse. For the drone, it is the ground distance.</span></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>SOH CAH TOA</h2>
+      <p>This is how we remember the three trig functions.</p>
+      <div class="soh">
+        <div><span class="big">SOH</span><span><b>S</b>ine = <b class="c-opp">O</b>pposite ÷ <b class="c-hyp">H</b>ypotenuse</span></div>
+        <div><span class="big">CAH</span><span><b>C</b>osine = <b class="c-adj">A</b>djacent ÷ <b class="c-hyp">H</b>ypotenuse</span></div>
+        <div><span class="big">TOA</span><span><b>T</b>angent = <b class="c-opp">O</b>pposite ÷ <b class="c-adj">A</b>djacent</span></div>
+      </div>
+    </div>
+
+    <div class="two">
+      <div class="card sec">
+        <div class="sec-tag">Case 1</div>
+        <h2>I do NOT know a SIDE</h2>
+        <p>You know the angle and one side. Use <b>sin</b>, <b>cos</b> or <b>tan</b> and multiply.</p>
+        <ul class="flist">
+          <li><span class="c-opp">opposite</span> = <span class="c-hyp">hypotenuse</span> × sin(θ)</li>
+          <li><span class="c-adj">adjacent</span> = <span class="c-hyp">hypotenuse</span> × cos(θ)</li>
+          <li><span class="c-opp">opposite</span> = <span class="c-adj">adjacent</span> × tan(θ)</li>
+        </ul>
+        <div class="example"><b>Drone example (Mission 1):</b> You stand 30 ft away (<span class="c-adj">adjacent</span>) and the angle is 52°. Height (<span class="c-opp">opposite</span>) = 30 × tan(52°) = 38.4 ft. Then add your eye height.</div>
+      </div>
+      <div class="card sec">
+        <div class="sec-tag">Case 2</div>
+        <h2>I do NOT know the ANGLE</h2>
+        <p>You know two sides. Use the <b>inverse</b>: sin⁻¹, cos⁻¹ or tan⁻¹.</p>
+        <ul class="flist">
+          <li>θ = sin⁻¹(<span class="c-opp">opposite</span> ÷ <span class="c-hyp">hypotenuse</span>)</li>
+          <li>θ = cos⁻¹(<span class="c-adj">adjacent</span> ÷ <span class="c-hyp">hypotenuse</span>)</li>
+          <li>θ = tan⁻¹(<span class="c-opp">opposite</span> ÷ <span class="c-adj">adjacent</span>)</li>
+        </ul>
+        <p><b>What is an inverse?</b> It is the undo button. tan turns an angle into a number. tan⁻¹ turns that number back into the angle. In Desmos, type <code>arcsin</code>, <code>arccos</code> or <code>arctan</code>.</p>
+        <div class="example"><b>Drone example (Mission 2):</b> The drone is 30 ft high (<span class="c-opp">opposite</span>) and the target is 40 ft away (<span class="c-adj">adjacent</span>). θ = tan⁻¹(30 ÷ 40) = 36.9°.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>How to pick the right one</h2>
+      <ol class="steps big-steps">
+        <li>Find the angle θ.</li>
+        <li>Label the sides: opposite, adjacent, hypotenuse.</li>
+        <li>Circle the two sides you have or need. Opposite and adjacent? Use <b>TOA</b> (tan).</li>
+        <li>Need a side? Multiply. Need the angle? Use the inverse.</li>
+      </ol>
+      <div class="btns"><button class="primary" id="gom1from0">I'm ready: go to Mission 1</button></div>
+    </div>
+  </div>
+
+  <div class="banner big" id="m1banner" role="note">
+    <div><b>Heads up: the SUBMIT button is on the Mission 2 tab!</b> Your Mission 1 results save automatically. Finish Mission 1, then go to Mission 2 and submit both missions together.</div>
+    <button class="primary" id="gom2">Go to Mission 2</button>
+  </div>
+
+  <div class="scene" id="scene">
+    <svg id="svg" viewBox="0 36 800 434" role="img" aria-label="Side view of a parking lot with a drone, a delivery box and a person">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="var(--sky-top)"/>
+          <stop offset="1" stop-color="var(--sky-bot)"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="800" height="430" fill="url(#sky)"/>
+      <rect x="0" y="430" width="800" height="40" fill="var(--asphalt)"/>
+      <g id="stripes"></g>
+      <g id="tape"></g>
+      <g id="dynamic"></g>
+    </svg>
+  </div>
+
+  <!-- Mission 1 -->
+  <div class="console" id="m1" role="tabpanel" aria-labelledby="tab1">
+    <div class="card">
+      <h2>Field readings</h2>
+      <div class="readouts">
+        <div class="readout"><div class="label">Distance</div><div class="val" id="m1d">30 ft</div></div>
+        <div class="readout hi"><div class="label">Clinometer</div><div class="val" id="m1a">0°</div><div class="lock" id="m1lock">Aim higher</div></div>
+        <div class="readout"><div class="label">Eye height</div><div class="eyein"><input id="m1eyeft" type="number" inputmode="numeric" min="3" max="6" step="1" value="5" aria-label="Eye height feet"><span>ft</span><input id="m1eyein" type="number" inputmode="numeric" min="0" max="11" step="1" value="0" aria-label="Eye height inches"><span>in</span></div><div class="lock on" id="m1eyedec">= 5 ft</div></div>
+      </div>
+      <div class="slider-row">
+        <label class="label" for="m1tilt">Tilt the clinometer until it points at the drone</label>
+        <input type="range" id="m1tilt" min="0" max="85" step="1" value="15">
+      </div>
+      <div class="slider-row">
+        <label class="label" for="m1slider">Walk closer or farther</label>
+        <input type="range" id="m1slider" min="15" max="125" step="5" value="30">
+      </div>
+      <div class="btns">
+        <button class="ghost" id="m1up">Fly up 5 ft</button>
+        <button class="ghost" id="m1down">Fly down 5 ft</button>
+      </div>
+      <p class="note">The drone hovers right above the delivery box. Aim the clinometer at the drone, then read the angle. If you walk or the drone moves, aim again. Type the eye height of whoever reads the clinometer.</p>
+    </div>
+    <div class="card">
+      <h2>Find the drone's height</h2>
+      <fieldset class="choices" id="m1formulas">
+        <legend class="label">Which formula finds the height above the ground?</legend>
+        <label class="choice"><input type="radio" name="m1f" id="m1fA" value="sin"> <span>A. distance × sin(angle) + eye height</span></label>
+        <label class="choice"><input type="radio" name="m1f" id="m1fB" value="div"> <span>B. distance ÷ tan(angle) + eye height</span></label>
+        <label class="choice"><input type="radio" name="m1f" id="m1fC" value="noeye"> <span>C. distance × tan(angle)</span></label>
+        <label class="choice"><input type="radio" name="m1f" id="m1fD" value="tan"> <span>D. distance × tan(angle) + eye height</span></label>
+      </fieldset>
+      <a class="linkbtn green" href="https://www.desmos.com/scientific" target="_blank" rel="noopener">Open Desmos Scientific Calculator</a>
+      <p class="note">In Desmos, click the wrench or settings icon and choose <b>Degrees</b>. Then type your formula. Use <code>*</code> to multiply, for example <code>tan(52)</code> or <code>2*sin(30)</code>.</p>
+      <div class="answer">
+        <label for="m1ans">Height =</label>
+        <input id="m1ans" type="number" inputmode="decimal" step="0.1" placeholder="?">
+        <span class="unit">ft above the ground</span>
+      </div>
+      <div class="btns">
+        <button class="primary" id="m1check">Check</button>
+        <button class="ghost" id="m1hintbtn" aria-expanded="false">Hint</button>
+        <button class="ghost" id="m1new">New drone</button>
+      </div>
+      <div class="hint" id="m1hint" hidden></div>
+      <div class="feedback" id="m1fb" aria-live="polite"></div>
+      <div class="saved" id="m1saved" hidden></div>
+    </div>
+  </div>
+
+  <!-- Mission 2 -->
+  <div class="console" id="m2" role="tabpanel" aria-labelledby="tab2" hidden>
+    <div class="banner" id="m2status" role="note"></div>
+    <div class="card">
+      <h2>Step 1: Mission numbers</h2>
+      <p class="note">Type the numbers Ms. K gives you in class.</p>
+      <div class="answer">
+        <label for="m2hin">Drone height</label>
+        <input id="m2hin" type="number" inputmode="decimal" min="5" max="70" step="1" value="30">
+        <span class="unit">ft</span>
+      </div>
+      <div class="answer">
+        <label for="m2tin">Target distance</label>
+        <input id="m2tin" type="number" inputmode="decimal" min="5" max="130" step="1" value="40">
+        <span class="unit">ft along the ground</span>
+      </div>
+      <div class="btns"><button class="ghost" id="m2new">Random practice numbers</button></div>
+      <h2>Step 2: Pick the formula</h2>
+      <fieldset class="choices" id="m2formulas">
+        <legend class="label">Which formula finds the angle of depression θ?</legend>
+        <label class="choice"><input type="radio" name="m2f" id="m2fA" value="sin"> <span>A. θ = sin⁻¹(height ÷ distance)</span></label>
+        <label class="choice"><input type="radio" name="m2f" id="m2fB" value="flip"> <span>B. θ = tan⁻¹(distance ÷ height)</span></label>
+        <label class="choice"><input type="radio" name="m2f" id="m2fC" value="tan"> <span>C. θ = tan⁻¹(height ÷ distance)</span></label>
+        <label class="choice"><input type="radio" name="m2f" id="m2fD" value="cos"> <span>D. θ = cos⁻¹(height ÷ distance)</span></label>
+      </fieldset>
+      <p class="note">Remember: height is <b>opposite</b> θ and the ground distance is <b>adjacent</b>.</p>
+    </div>
+    <div class="card">
+      <h2>Step 3: Calculate</h2>
+      <a class="linkbtn" href="https://www.desmos.com/scientific" target="_blank" rel="noopener">Open Desmos Scientific Calculator</a>
+      <ol class="steps">
+        <li>Click the wrench or settings icon and choose <b>Degrees</b> (DEG).</li>
+        <li>Type your formula, for example <code>arctan(30/40)</code>. In Desmos, tan⁻¹ is written <b>arctan</b>.</li>
+        <li>Round to the nearest tenth.</li>
+      </ol>
+      <h2>Step 4: Submit</h2>
+      <div class="answer">
+        <label for="m2name">Your name</label>
+        <input id="m2name" class="wide" type="text" autocomplete="name" placeholder="First and last name">
+      </div>
+      <div class="answer">
+        <label for="m2ans">Angle of depression =</label>
+        <input id="m2ans" type="number" inputmode="decimal" step="0.1" placeholder="?">
+        <span class="unit">°</span>
+      </div>
+      <div class="answer">
+        <label for="m2dist">Bonus: drone to target =</label>
+        <input id="m2dist" type="number" inputmode="decimal" step="0.1" placeholder="optional">
+        <span class="unit">ft</span>
+      </div>
+      <div class="btns">
+        <button class="primary" id="m2check">Submit both missions</button>
+        <button class="ghost" id="m2hintbtn" aria-expanded="false">Hint</button>
+      </div>
+      <div class="hint" id="m2hint" hidden></div>
+      <div class="feedback" id="m2fb" aria-live="polite"></div>
+    </div>
+    <div class="card report" id="m2report" hidden>
+      <h2>Mission Report</h2>
+      <pre id="m2reporttext"></pre>
+      <div class="btns">
+        <button class="primary" id="m2copy">Copy report</button>
+      </div>
+      <p class="note" id="m2copymsg"></p>
+      <p class="note"><b>Turn it in on Canvas:</b> take a screenshot of this report (Chromebook: Ctrl + Shift + Show windows, Windows: Windows + Shift + S, Mac: Cmd + Shift + 4), or press Copy report and paste it into your Google Doc. Then attach it to the drone assignment in Canvas.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const S = 5, GROUND = 430, XD = 740;
+  let EYE = 5;
+  const fe = () => String(Math.round(EYE * 100) / 100);
+  const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI;
+  const $ = id => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  const r1 = n => Math.round(n * 10) / 10;
+  const near = (a, b, tol) => Math.abs(a - b) <= tol;
+  let mode = 1, score = 0;
+  const m1 = { h: 0, d: 30, solved: false, rec: null, checks: 0, done: 0 };
+  const m2 = { h: 30, t: 40, solved: false, aimed: null };
+
+  function el(tag, attrs, parent) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function text(x, y, str, attrs, parent) {
+    const t = el("text", Object.assign({ x, y, "font-family": "Chakra Petch, system-ui, sans-serif", "font-size": 15, "font-weight": 600 }, attrs || {}), parent);
+    t.textContent = str;
+    return t;
+  }
+
+  // Static: parking stripes and tape-measure marks
+  (function staticScene() {
+    const st = $("stripes");
+    for (let x = 30; x < 800; x += 90) el("rect", { x, y: 436, width: 30, height: 4, fill: "var(--stripe)", rx: 1 }, st);
+    const tp = $("tape");
+    for (let f = 0; f <= 140; f += 5) {
+      const x = XD - f * S;
+      if (x < 4) break;
+      el("line", { x1: x, y1: 430, x2: x, y2: f % 10 === 0 ? 446 : 440, stroke: "var(--asphalt-ink)", "stroke-width": 1.5 }, tp);
+      if (f % 20 === 0) text(x, 463, f + " ft", { "text-anchor": "middle", fill: "var(--asphalt-ink)", "font-size": 12 }, tp);
+    }
+  })();
+
+  function drawCone(g, x, color) {
+    // a delivery box on a chalk helipad marks the spot under the drone
+    el("rect", { x: x - 24, y: GROUND - 2, width: 48, height: 3, rx: 1, fill: "var(--chalk)" }, g);
+    el("rect", { x: x - 11, y: GROUND - 18, width: 22, height: 16, rx: 1.5, fill: "var(--box)" }, g);
+    el("rect", { x: x - 2, y: GROUND - 18, width: 4, height: 16, fill: "var(--tape)" }, g);
+    el("rect", { x: x - 11, y: GROUND - 18, width: 22, height: 3, fill: "var(--tape)" }, g);
+    text(x + 15, GROUND - 5, "BOX", { "text-anchor": "start", fill: "var(--box-ink)", "font-size": 12 }, g);
+  }
+  function drawTarget(g, x) {
+    el("circle", { cx: x, cy: GROUND - 1, r: 12, fill: "none", stroke: "var(--cone)", "stroke-width": 3 }, g);
+    el("circle", { cx: x, cy: GROUND - 1, r: 4, fill: "var(--cone)" }, g);
+    text(x, GROUND - 18, "TARGET", { "text-anchor": "middle", fill: "var(--cone)", "font-size": 12 }, g);
+  }
+  function drawDrone(g, x, y) {
+    const d = el("g", {}, g);
+    el("line", { x1: x - 22, y1: y, x2: x + 22, y2: y, stroke: "var(--drone)", "stroke-width": 4, "stroke-linecap": "round" }, d);
+    el("rect", { x: x - 10, y: y - 5, width: 20, height: 11, rx: 4, fill: "var(--drone)" }, d);
+    el("circle", { cx: x, cy: y + 8, r: 3, fill: "var(--hud)" }, d);
+    [-22, 22].forEach(dx => {
+      el("line", { x1: x + dx, y1: y, x2: x + dx, y2: y - 5, stroke: "var(--drone)", "stroke-width": 3 }, d);
+      el("ellipse", { class: "rotor", cx: x + dx, cy: y - 7, rx: 13, ry: 2.5, fill: "var(--drone)", opacity: .55 }, d);
+    });
+  }
+  function drawPerson(g, x) {
+    const c = "var(--ink)";
+    const ey = GROUND - EYE * S;
+    el("circle", { cx: x - 2, cy: ey, r: 5, fill: c }, g);
+    el("line", { x1: x - 2, y1: ey + 5, x2: x - 2, y2: GROUND - 10, stroke: c, "stroke-width": 3, "stroke-linecap": "round" }, g);
+    el("line", { x1: x - 2, y1: GROUND - 10, x2: x - 7, y2: GROUND, stroke: c, "stroke-width": 3, "stroke-linecap": "round" }, g);
+    el("line", { x1: x - 2, y1: GROUND - 10, x2: x + 3, y2: GROUND, stroke: c, "stroke-width": 3, "stroke-linecap": "round" }, g);
+    el("line", { x1: x - 2, y1: ey + 9, x2: x + 5, y2: ey + 2, stroke: c, "stroke-width": 2.5, "stroke-linecap": "round" }, g);
+    el("rect", { x: x + 3, y: ey - 3, width: 4, height: 7, rx: 1, fill: "var(--hud)" }, g);
+    text(x - 2, ey - 14, "Ms. K", { "text-anchor": "middle", fill: "var(--ink)", "font-size": 12 }, g);
+  }
+  function arc(g, cx, cy, r, a0, a1) {
+    // screen angles in degrees (y down), drawn from a0 to a1 with decreasing angle
+    const p0 = [cx + r * Math.cos(rad(a0)), cy + r * Math.sin(rad(a0))];
+    const p1 = [cx + r * Math.cos(rad(a1)), cy + r * Math.sin(rad(a1))];
+    el("path", { d: `M${p0[0]} ${p0[1]} A${r} ${r} 0 0 0 ${p1[0]} ${p1[1]}`, fill: "none", stroke: "var(--hud)", "stroke-width": 3 }, g);
+  }
+  function label(g, x, y, str, color) {
+    const t = text(x, y, str, { "text-anchor": "middle", fill: color || "var(--hud)", "font-size": 16 }, g);
+    return t;
+  }
+
+  // ---------- Mission 1 ----------
+  function m1Angle() { return deg(Math.atan((m1.h - EYE) / m1.d)); }
+  function m1Shown() { return m1.tilt; }
+  function m1Locked() { return Math.abs(m1.tilt - m1Angle()) <= 1; }
+  function flyM1(dh) {
+    const nh = Math.min(75, Math.max(10, m1.h + dh));
+    if (nh === m1.h) return;
+    m1.h = r1(nh); m1.solved = false;
+    $("m1fb").textContent = ""; $("m1fb").className = "feedback";
+    render();
+  }
+  function newM1() {
+    m1.h = r1(18 + Math.random() * 52);
+    m1.solved = false;
+    $("m1ans").value = "";
+    $("m1fb").textContent = ""; $("m1fb").className = "feedback";
+    render();
+  }
+  function renderM1(g) {
+    const dy = GROUND - m1.h * S, xp = XD - m1.d * S, ey = GROUND - EYE * S;
+    drawCone(g, XD);
+    el("line", { x1: XD, y1: GROUND - 22, x2: XD, y2: dy + 12, stroke: "var(--muted)", "stroke-width": 2, "stroke-dasharray": "3 5" }, g);
+    label(g, XD + 32, (dy + GROUND) / 2, m1.solved ? m1.h.toFixed(1) + " ft" : "h = ?", m1.solved ? "var(--good)" : "var(--ink)");
+    el("line", { x1: xp + 6, y1: ey, x2: XD, y2: ey, stroke: "var(--muted)", "stroke-width": 1.5, "stroke-dasharray": "6 5" }, g);
+    const a = m1.tilt, locked = m1Locked(), ex = xp + 6;
+    const ca = Math.cos(rad(a)), sa = Math.sin(rad(a));
+    const reach = Math.min((XD + 50 - ex) / Math.max(ca, 1e-6), sa > 1e-6 ? (ey - 66) / sa : 1e9);
+    el("line", { x1: ex, y1: ey, x2: ex + reach * ca, y2: ey - reach * sa, stroke: locked ? "var(--good)" : "var(--warn)", "stroke-width": 2.5, "stroke-dasharray": "8 6" }, g);
+    if (a > 0) arc(g, ex, ey, 46, 0, -a);
+    label(g, ex + 66 * Math.cos(rad(a / 2)), ey - 66 * Math.sin(rad(a / 2)) + 5, a + "°");
+    if (locked) {
+      el("circle", { cx: XD, cy: dy, r: 30, fill: "none", stroke: "var(--good)", "stroke-width": 2 }, g);
+      text(XD - 36, dy - 30 < 52 ? dy + 44 : dy - 30, "LOCKED ON", { "text-anchor": "end", fill: "var(--good)", "font-size": 13 }, g);
+    }
+    // distance bracket
+    el("line", { x1: xp, y1: 418, x2: XD, y2: 418, stroke: "var(--ink)", "stroke-width": 1.5 }, g);
+    el("line", { x1: xp, y1: 412, x2: xp, y2: 424, stroke: "var(--ink)", "stroke-width": 1.5 }, g);
+    el("line", { x1: XD, y1: 412, x2: XD, y2: 424, stroke: "var(--ink)", "stroke-width": 1.5 }, g);
+    const bx = (xp + XD) / 2;
+    el("rect", { x: bx - 26, y: 409, width: 52, height: 18, rx: 4, fill: "var(--sky-bot)" }, g);
+    text(bx, 423, m1.d + " ft", { "text-anchor": "middle", fill: "var(--ink)", "font-size": 13 }, g);
+    drawPerson(g, xp);
+    drawDrone(g, XD, dy);
+    $("m1d").textContent = m1.d + " ft";
+    $("m1a").textContent = m1Shown() + "°";
+    const lk = $("m1lock");
+    lk.className = "lock" + (locked ? " on" : "");
+    lk.textContent = locked ? "On target" : (m1.tilt < m1Angle() ? "Aim higher" : "Aim lower");
+    $("m1hint").innerHTML = locked
+      ? `The height above the eyes is opposite the ${m1Shown()}° angle. The ${m1.d} ft distance is adjacent.<br>Which trig ratio is opposite ÷ adjacent? Then don't forget the ${fe()} ft eye height.`
+      : `First tilt the clinometer until it says "On target".`;
+  }
+  const M1F = {
+    sin: "distance × sin(angle) + eye height", div: "distance ÷ tan(angle) + eye height",
+    noeye: "distance × tan(angle)", tan: "distance × tan(angle) + eye height"
+  };
+  function m1Lines() {
+    const r = m1.rec;
+    if (!r) return ["MISSION 1: HOW HIGH?", "Not completed", "Mission 1 score: 0 / 3"];
+    const pts = (r.formulaOk ? 1 : 0) + (r.ok ? 2 : 0);
+    return [
+      "MISSION 1: HOW HIGH?",
+      "Distance: " + r.d + " ft    Angle: " + r.A + "°    Eye height: " + r.eye + " ft",
+      "Formula: height = " + M1F[r.formula] + (r.formulaOk ? "   CORRECT" : "   NOT CORRECT"),
+      "My height: " + r.v + " ft   " + (r.ok ? "CORRECT (expected " + r.expect + " ft)" : "NOT CORRECT (expected " + r.expect + " ft)"),
+      "Drones completed: " + m1.done + "    Checks: " + m1.checks,
+      "Mission 1 score: " + pts + " / 3"
+    ];
+  }
+  function m1Pts() { const r = m1.rec; return r ? (r.formulaOk ? 1 : 0) + (r.ok ? 2 : 0) : 0; }
+  function saveM1() {
+    const r = m1.rec, box = $("m1saved");
+    box.hidden = false;
+    box.innerHTML = `<b>Saved for your report:</b> height ${r.v} ft, ${r.ok ? "correct" : "not correct yet"}. Drones completed: ${m1.done}.`;
+    updateM2Status();
+  }
+  function updateM2Status() {
+    const b = $("m2status"), r = m1.rec;
+    if (!r) { b.className = "banner warnb"; b.innerHTML = "<div><b>Mission 1 is not done yet.</b> Your report will show Mission 1 as not completed. Finish it first for full points.</div><button class=\"primary\" id=\"gom1\">Go to Mission 1</button>"; $("gom1").onclick = () => setMode(1); }
+    else { b.className = "banner goodb"; b.innerHTML = `<div><b>Mission 1 saved.</b> Height ${r.v} ft, ${r.ok ? "correct" : "not correct"}, formula ${r.formulaOk ? "correct" : "not correct"}. Now finish Mission 2 and press <b>Submit both missions</b>.</div>`; }
+  }
+  function checkM1() {
+    const fb = $("m1fb");
+    const v = parseFloat($("m1ans").value);
+    if (!m1Locked()) { fb.className = "feedback warn"; fb.textContent = "Aim the clinometer at the drone first. Move the tilt slider until it says On target."; return; }
+    const pick = document.querySelector('input[name="m1f"]:checked');
+    if (!pick) { fb.className = "feedback warn"; fb.textContent = "Pick the formula you used first."; return; }
+    if (isNaN(v)) { fb.className = "feedback warn"; fb.textContent = "Type the height in feet first, then press Check."; return; }
+    const A = m1Shown(), d = m1.d;
+    const expect = d * Math.tan(rad(A)) + EYE;
+    const tol = Math.max(1, expect * 0.03);
+    const formulaOk = pick.value === "tan";
+    const ok = near(v, expect, tol) || near(v, m1.h, tol);
+    m1.checks++;
+    if (ok && !m1.solved) m1.done++;
+    m1.rec = { d, A, eye: fe(), formula: pick.value, formulaOk, v, ok, expect: r1(expect), real: m1.h.toFixed(1) };
+    saveM1();
+    if (ok) {
+      if (!m1.solved) { score++; updateScore(); }
+      m1.solved = true;
+      fb.className = "feedback good";
+      fb.innerHTML = `<b>Mission complete!</b> With these readings the height is ${r1(expect)} ft. The real height is ${m1.h.toFixed(1)} ft. The small gap comes from the clinometer rounding to a whole degree.` + (formulaOk ? "" : " But check your formula choice: it does not match your answer.") + ` <b>Now go to the Mission 2 tab to submit.</b>`;
+      render();
+      return;
+    }
+    fb.className = "feedback warn";
+    if (near(v, expect - EYE, tol)) fb.innerHTML = `<b>Almost!</b> You found the height above the eyes. Add the ${fe()} ft eye height to get the height above the ground.`;
+    else if (near(v, d * Math.sin(rad(A)) + EYE, tol) || near(v, d * Math.sin(rad(A)), tol)) fb.innerHTML = "<b>Check your ratio.</b> It looks like you used sine. The height is <i>opposite</i> the angle and the distance is <i>adjacent</i>, so use tangent.";
+    else if (near(v, d * Math.cos(rad(A)) + EYE, tol) || near(v, d * Math.cos(rad(A)), tol)) fb.innerHTML = "<b>Check your ratio.</b> It looks like you used cosine. Opposite over adjacent is tangent.";
+    else if (near(v, d * Math.tan(A) + EYE, Math.max(1, Math.abs(d * Math.tan(A)) * .03)) || near(v, d * Math.tan(A), Math.max(1, Math.abs(d * Math.tan(A)) * .03))) fb.innerHTML = "<b>Calculator check!</b> Your calculator is probably in radians. Switch it to DEG and try again.";
+    else if (near(v, d / Math.tan(rad(A)) + EYE, tol) || near(v, d / Math.tan(rad(A)), tol)) fb.innerHTML = "<b>Flip it.</b> It looks like you divided by tan. Height above eyes = distance <i>×</i> tan(angle).";
+    else fb.innerHTML = "<b>Not quite.</b> Draw the triangle: the angle is at Ms. K's eyes, the distance is the bottom side, the height is the tall side. Tap Hint if you are stuck.";
+  }
+
+  // ---------- Mission 2 ----------
+  function m2True() { return deg(Math.atan(m2.h / m2.t)); }
+  function resetM2Result() {
+    m2.solved = false; m2.aimed = null; m2.attempts = 0;
+    $("m2fb").textContent = ""; $("m2fb").className = "feedback";
+    $("m2report").hidden = true;
+  }
+  function setM2(h, t) {
+    m2.h = Math.min(70, Math.max(5, Math.round(h)));
+    m2.t = Math.min(130, Math.max(5, Math.round(t)));
+    resetM2Result();
+    render();
+  }
+  function newM2() {
+    const h = 15 + 5 * Math.floor(Math.random() * 10), t = 20 + 5 * Math.floor(Math.random() * 21);
+    $("m2hin").value = h; $("m2tin").value = t;
+    $("m2ans").value = ""; $("m2dist").value = "";
+    setM2(h, t);
+  }
+  function readM2Inputs() {
+    const h = parseFloat($("m2hin").value), t = parseFloat($("m2tin").value);
+    if (isNaN(h) || isNaN(t)) return;
+    if (Math.round(h) !== m2.h || Math.round(t) !== m2.t) setM2(h, t);
+  }
+  function renderM2(g) {
+    const dy = GROUND - m2.h * S, xt = XD - m2.t * S;
+    drawCone(g, XD);
+    drawTarget(g, xt);
+    el("line", { x1: XD, y1: GROUND - 22, x2: XD, y2: dy + 12, stroke: "var(--muted)", "stroke-width": 2, "stroke-dasharray": "3 5" }, g);
+    label(g, XD + 32, (dy + GROUND) / 2, m2.h + " ft", "var(--ink)");
+    el("line", { x1: XD - 26, y1: dy, x2: Math.max(10, xt - 30), y2: dy, stroke: "var(--muted)", "stroke-width": 1.5, "stroke-dasharray": "6 5" }, g);
+    text(Math.max(40, xt - 10), dy - 8, "horizontal", { "text-anchor": "middle", fill: "var(--muted)", "font-size": 12 }, g);
+    // distance bracket
+    el("line", { x1: xt, y1: 390, x2: XD, y2: 390, stroke: "var(--ink)", "stroke-width": 1.5 }, g);
+    el("line", { x1: xt, y1: 384, x2: xt, y2: 396, stroke: "var(--ink)", "stroke-width": 1.5 }, g);
+    el("line", { x1: XD, y1: 384, x2: XD, y2: 396, stroke: "var(--ink)", "stroke-width": 1.5 }, g);
+    const bx = (xt + XD) / 2;
+    el("rect", { x: bx - 26, y: 381, width: 52, height: 18, rx: 4, fill: "var(--sky-bot)" }, g);
+    text(bx, 395, m2.t + " ft", { "text-anchor": "middle", fill: "var(--ink)", "font-size": 13 }, g);
+
+    const show = m2.aimed;
+    const a = show != null ? show : null;
+    if (a != null && a > 0 && a < 90) {
+      const land = XD - (m2.h / Math.tan(rad(a))) * S;
+      const len = Math.hypot(XD - land, GROUND - dy);
+      const ray = el("line", { class: "ray", x1: XD, y1: dy, x2: land, y2: GROUND, stroke: m2.solved ? "var(--good)" : "var(--warn)", "stroke-width": 3, "stroke-dasharray": len, "stroke-dashoffset": len }, g);
+      requestAnimationFrame(() => requestAnimationFrame(() => ray.setAttribute("stroke-dashoffset", 0)));
+      arc(g, XD, dy, 50, 180, 180 - a);
+      label(g, XD - 72 * Math.cos(rad(a / 2)), dy + 72 * Math.sin(rad(a / 2)) + 5, r1(a) + "°", m2.solved ? "var(--good)" : "var(--warn)");
+      if (m2.solved) label(g, (XD + xt) / 2 + 10, (dy + GROUND) / 2 - 14, r1(Math.hypot(m2.h, m2.t)) + " ft", "var(--good)");
+    } else {
+      arc(g, XD, dy, 50, 180, 180 - m2True());
+      label(g, XD - 74 * Math.cos(rad(m2True() / 2)), dy + 74 * Math.sin(rad(m2True() / 2)) + 5, "θ = ?", "var(--hud)");
+    }
+    drawDrone(g, XD, dy);
+    $("m2hint").innerHTML = `The height (${m2.h} ft) is opposite θ. The ground distance (${m2.t} ft) is adjacent.<br>Which trig ratio is opposite ÷ adjacent? Use its inverse to find θ.<br>Bonus: √(height² + distance²)`;
+  }
+  const FORMULAS = {
+    sin: "θ = sin⁻¹(height ÷ distance)", flip: "θ = tan⁻¹(distance ÷ height)",
+    tan: "θ = tan⁻¹(height ÷ distance)", cos: "θ = cos⁻¹(height ÷ distance)"
+  };
+  function checkM2() {
+    const fb = $("m2fb");
+    const name = $("m2name").value.trim();
+    const pick = document.querySelector('input[name="m2f"]:checked');
+    const v = parseFloat($("m2ans").value);
+    if (!name) { fb.className = "feedback warn"; fb.textContent = "Type your name first, so Ms. K knows whose report it is."; $("m2name").focus(); return; }
+    if (!pick) { fb.className = "feedback warn"; fb.textContent = "Pick a formula in Step 2 first."; return; }
+    if (isNaN(v)) { fb.className = "feedback warn"; fb.textContent = "Type your angle in degrees, then press Submit."; $("m2ans").focus(); return; }
+    m2.attempts = (m2.attempts || 0) + 1;
+    const T = m2True();
+    const formulaOk = pick.value === "tan";
+    const dist = parseFloat($("m2dist").value), hyp = Math.hypot(m2.h, m2.t);
+    const bonusOk = !isNaN(dist) && near(dist, hyp, 1);
+    const hit = near(v, T, 1);
+    let msg = "";
+    if (hit) {
+      if (!m2.solved) { score++; updateScore(); }
+      m2.solved = true; m2.aimed = v;
+      fb.className = "feedback good";
+      msg = `<b>Target in frame!</b> The exact angle is ${r1(T)}°.`;
+    } else {
+      m2.solved = false;
+      fb.className = "feedback warn";
+      if (v > 0 && v < 90) {
+        m2.aimed = v;
+        const land = m2.h / Math.tan(rad(v));
+        msg = `<b>Missed!</b> The camera hit the ground ${r1(Math.abs(land - m2.t))} ft ${land < m2.t ? "too close to the drone" : "past the target"}. `;
+      } else { m2.aimed = null; msg = "<b>Missed!</b> The camera tilt must be between 0° and 90°. "; }
+      if (!formulaOk) msg += "Check your formula in Step 2. ";
+      else if (near(v, Math.atan(m2.h / m2.t), 0.05)) msg += "Your calculator is probably in radians. Switch Desmos to Degrees. ";
+      else if (v > T) msg += "Use a smaller angle. ";
+      else msg += "Use a bigger angle. ";
+      msg += "Fix it and submit again.";
+    }
+    if (!isNaN(dist)) msg += bonusOk ? ` <b>Bonus correct!</b>` : ` Bonus distance is off: use √(height² + distance²).`;
+    fb.innerHTML = msg;
+    render();
+
+    const pts = (formulaOk ? 1 : 0) + (hit ? 2 : 0);
+    const when = new Date().toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+    const lines = [
+      "DRONE TRIG LAB: MISSION REPORT",
+      "Name: " + name,
+      "Submitted: " + when,
+      "",
+      ...m1Lines(),
+      "",
+      "MISSION 2: AIM THE CAMERA",
+      "Drone height: " + m2.h + " ft    Target distance: " + m2.t + " ft",
+      "Formula: " + FORMULAS[pick.value] + (formulaOk ? "   CORRECT" : "   NOT CORRECT"),
+      "My angle of depression: " + v + "°   " + (hit ? "HIT (exact " + r1(T) + "°)" : "MISS"),
+      "Bonus distance: " + (isNaN(dist) ? "not answered" : dist + " ft   " + (bonusOk ? "CORRECT" : "NOT CORRECT")),
+      "Attempts: " + m2.attempts,
+      "Mission 2 score: " + pts + " / 3" + (bonusOk ? "  + 1 bonus" : ""),
+      "",
+      "TOTAL SCORE: " + (pts + m1Pts()) + " / 6" + (bonusOk ? "  + 1 bonus" : "")
+    ];
+    $("m2reporttext").textContent = lines.join("\n");
+    $("m2copymsg").textContent = "";
+    $("m2report").hidden = false;
+  }
+  function copyReport() {
+    const txt = $("m2reporttext").textContent;
+    const msg = $("m2copymsg");
+    const fallback = () => {
+      const r = document.createRange(); r.selectNodeContents($("m2reporttext"));
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      msg.textContent = "The report is selected. Press Ctrl + C (Cmd + C on Mac) to copy it.";
+    };
+    try {
+      navigator.clipboard.writeText(txt).then(() => { msg.textContent = "Copied! Paste it into your Google Doc."; }, fallback);
+    } catch (e) { fallback(); }
+  }
+
+  function updateScore() { $("score").textContent = "Missions completed: " + score; }
+
+  function render() {
+    const g = $("dynamic");
+    while (g.firstChild) g.removeChild(g.firstChild);
+    if (mode === 0) return;
+    if (mode === 1) renderM1(g); else renderM2(g);
+  }
+
+  function setMode(n) {
+    mode = n;
+    $("tab0").setAttribute("aria-selected", n === 0);
+    $("tab1").setAttribute("aria-selected", n === 1);
+    $("tab2").setAttribute("aria-selected", n === 2);
+    $("m1").hidden = n !== 1; $("m2").hidden = n !== 2; $("m1banner").hidden = n !== 1;
+    $("m0").hidden = n !== 0; $("scene").hidden = n === 0;
+    try { localStorage.setItem("dtl-mode", String(n)); } catch (e) {}
+    render();
+  }
+  function toggleHint(btn, box) {
+    box.hidden = !box.hidden;
+    btn.setAttribute("aria-expanded", String(!box.hidden));
+    btn.textContent = box.hidden ? "Hint" : "Hide hint";
+  }
+
+  $("tab0").addEventListener("click", () => setMode(0));
+  $("tab1").addEventListener("click", () => setMode(1));
+  $("gom1from0").addEventListener("click", () => { setMode(1); window.scrollTo({ top: 0, behavior: "smooth" }); });
+  document.querySelectorAll(".sidebtn").forEach(btn => {
+    btn.setAttribute("aria-pressed", "false");
+    btn.addEventListener("click", () => {
+      const on = btn.getAttribute("aria-pressed") !== "true";
+      document.querySelectorAll(".sidebtn").forEach(b => b.setAttribute("aria-pressed", "false"));
+      document.querySelectorAll(".tri .side").forEach(l => l.classList.remove("on"));
+      const tri = document.querySelector(".tri");
+      if (on) { btn.setAttribute("aria-pressed", "true"); $("side" + btn.dataset.side).classList.add("on"); tri.classList.add("focus"); }
+      else tri.classList.remove("focus");
+    });
+  });
+  $("tab2").addEventListener("click", () => setMode(2));
+  $("m1slider").addEventListener("input", e => { m1.d = +e.target.value; render(); });
+  $("m1tilt").addEventListener("input", e => { m1.tilt = +e.target.value; render(); });
+  function setEye() {
+    let ft = parseFloat($("m1eyeft").value), inch = parseFloat($("m1eyein").value);
+    if (isNaN(ft)) ft = 0; if (isNaN(inch)) inch = 0;
+    const e = Math.min(7, Math.max(3, ft + inch / 12));
+    EYE = e;
+    $("m1eyedec").textContent = "= " + fe() + " ft";
+    m1.solved = false; $("m1fb").textContent = ""; $("m1fb").className = "feedback";
+    render();
+  }
+  $("m1eyeft").addEventListener("input", setEye);
+  $("m1eyein").addEventListener("input", setEye);
+  $("m1up").addEventListener("click", () => flyM1(5));
+  $("m1down").addEventListener("click", () => flyM1(-5));
+  $("m1check").addEventListener("click", checkM1);
+  $("m1new").addEventListener("click", newM1);
+  $("m1hintbtn").addEventListener("click", () => toggleHint($("m1hintbtn"), $("m1hint")));
+  $("m1ans").addEventListener("keydown", e => { if (e.key === "Enter") checkM1(); });
+  $("m2check").addEventListener("click", checkM2);
+  $("m2new").addEventListener("click", newM2);
+  $("m2hin").addEventListener("input", readM2Inputs);
+  $("m2tin").addEventListener("input", readM2Inputs);
+  $("m2copy").addEventListener("click", copyReport);
+  $("gom2").addEventListener("click", () => { setMode(2); window.scrollTo({ top: 0, behavior: "smooth" }); });
+  $("m2hintbtn").addEventListener("click", () => toggleHint($("m2hintbtn"), $("m2hint")));
+  $("m2ans").addEventListener("keydown", e => { if (e.key === "Enter") checkM2(); });
+  $("m2dist").addEventListener("keydown", e => { if (e.key === "Enter") checkM2(); });
+
+  m1.d = +$("m1slider").value;
+  m1.tilt = +$("m1tilt").value;
+  m1.h = r1(18 + Math.random() * 52);
+  let start = 0;
+  try { const sv = localStorage.getItem("dtl-mode"); if (sv === "1" || sv === "2") start = +sv; } catch (e) {}
+  updateM2Status();
+  setMode(start);
+})();
+</script>
+
+</body></html>
