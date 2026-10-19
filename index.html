@@ -167,6 +167,25 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
 .flist li { font: 600 18px var(--display); background: var(--bg); border-radius: 8px; padding: 8px 12px; }
 .example { background: var(--good-soft); border-radius: 10px; padding: 10px 12px; font-size: 15px; }
 .big-steps { font-size: 17px; }
+.calc { gap: 10px; }
+.calc-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.deg { font: 700 13px var(--display); letter-spacing: .08em; color: var(--good); background: var(--good-soft); padding: 4px 10px; border-radius: 999px; }
+.calc-in { width: 100%; font: 600 22px var(--display); padding: 10px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); }
+.calc-in:focus-visible { outline: 3px solid var(--hud); outline-offset: 2px; }
+.calc-out { min-height: 54px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; padding: 8px 12px; border-radius: 10px; background: var(--hud-soft); font-family: var(--display); font-variant-numeric: tabular-nums; }
+.calc-out .res { font-size: 26px; font-weight: 700; color: var(--hud); }
+.calc-out .tenth { font-size: 16px; font-weight: 600; color: var(--ink); }
+.calc-out .err { color: var(--warn); font-weight: 600; font-family: var(--body); }
+.calc-out .muted { color: var(--muted); font-family: var(--body); }
+.keys { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; max-width: 560px; }
+.key { font: 600 18px var(--display); padding: 12px 0; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; min-width: 0; }
+.key:hover { border-color: var(--hud); }
+.key:focus-visible { outline: 3px solid var(--hud); outline-offset: 1px; }
+.key.trig { background: var(--hud-soft); color: var(--hud); border-color: transparent; font-size: 16px; }
+.key.op { color: var(--adj); }
+.key.ctl { color: var(--muted); }
+.key.eq { background: var(--good); color: var(--panel); border-color: var(--good); }
+@media (max-width: 420px) { .key { font-size: 16px; padding: 10px 0; } .key.trig { font-size: 14px; } }
 .rotor { transform-box: fill-box; transform-origin: center; animation: spin .25s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .rotor { animation: none; } .ray { transition: none !important; } }
@@ -186,7 +205,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
   <div class="tabs" role="tablist" aria-label="Missions">
     <button class="tab" role="tab" id="tab0" aria-selected="false" aria-controls="m0">Mission 0: Trig basics</button>
     <button class="tab" role="tab" id="tab1" aria-selected="true" aria-controls="m1">Mission 1: How high?</button>
-    <button class="tab" role="tab" id="tab2" aria-selected="false" aria-controls="m2">Mission 2: Aim + SUBMIT</button>
+    <button class="tab" role="tab" id="tab2" aria-selected="false" aria-controls="m2">Mission 2: Bonus + SUBMIT</button>
   </div>
 
   <div class="m0" id="m0" role="tabpanel" aria-labelledby="tab0" hidden>
@@ -273,7 +292,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
   </div>
 
   <div class="banner big" id="m1banner" role="note">
-    <div><b>Heads up: the SUBMIT button is on the Mission 2 tab!</b> Your Mission 1 results save automatically. Finish Mission 1, then go to Mission 2 and submit both missions together.</div>
+    <div><b>Heads up: the SUBMIT button is on the Mission 2 tab!</b> Your Mission 1 results save automatically. When you finish Mission 1, go to Mission 2, type your name and press Submit. Mission 2 itself is a bonus.</div>
     <button class="primary" id="gom2">Go to Mission 2</button>
   </div>
 
@@ -351,12 +370,12 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       <p class="note">Type the numbers Ms. K gives you in class.</p>
       <div class="answer">
         <label for="m2hin">Drone height</label>
-        <input id="m2hin" type="number" inputmode="decimal" min="5" max="70" step="1" value="30">
+        <input id="m2hin" type="number" inputmode="decimal" min="5" max="70" step="1" value="25">
         <span class="unit">ft</span>
       </div>
       <div class="answer">
         <label for="m2tin">Target distance</label>
-        <input id="m2tin" type="number" inputmode="decimal" min="5" max="130" step="1" value="40">
+        <input id="m2tin" type="number" inputmode="decimal" min="5" max="130" step="1" value="60">
         <span class="unit">ft along the ground</span>
       </div>
       <div class="btns"><button class="ghost" id="m2new">Random practice numbers</button></div>
@@ -379,6 +398,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
         <li>Round to the nearest tenth.</li>
       </ol>
       <h2>Step 4: Submit</h2>
+      <p class="note">Skipping the bonus? Just type your name and press Submit. Leave the formula and angle empty.</p>
       <div class="answer">
         <label for="m2name">Your name</label>
         <input id="m2name" class="wide" type="text" autocomplete="name" placeholder="First and last name">
@@ -394,7 +414,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
         <span class="unit">ft</span>
       </div>
       <div class="btns">
-        <button class="primary" id="m2check">Submit both missions</button>
+        <button class="primary" id="m2check">Submit my report</button>
         <button class="ghost" id="m2hintbtn" aria-expanded="false">Hint</button>
       </div>
       <div class="hint" id="m2hint" hidden></div>
@@ -407,9 +427,21 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
         <button class="primary" id="m2copy">Copy report</button>
       </div>
       <p class="note" id="m2copymsg"></p>
-      <p class="note"><b>Turn it in on Canvas:</b> take a screenshot of this report (Chromebook: Ctrl + Shift + Show windows, Windows: Windows + Shift + S, Mac: Cmd + Shift + 4), or press Copy report and paste it into your Google Doc. Then attach it to the drone assignment in Canvas.</p>
+      <p class="note"><b>Turn it in on Canvas:</b> take a screenshot of this report (Chromebook: Ctrl + Shift + Show windows, Windows: Windows + Shift + S, Mac: Cmd + Shift + 4), or press <b>Copy report</b> and paste it into the "My Mission Report" box in your Google Doc. Then submit the Google Doc in Canvas.</p>
     </div>
   </div>
+
+  <section class="card calc" id="calc" aria-labelledby="calcTitle">
+    <div class="calc-head">
+      <h2 id="calcTitle">Calculator</h2>
+      <span class="deg">Always in DEGREES</span>
+    </div>
+    <label class="label" for="calcIn">Type or tap your problem</label>
+    <input id="calcIn" class="calc-in" type="text" inputmode="none" autocomplete="off" spellcheck="false" placeholder="example: 30 × tan(52) + 5">
+    <div class="calc-out" id="calcOut" aria-live="polite"><span class="muted">Your answer shows here.</span></div>
+    <div class="keys" id="calcKeys"></div>
+    <p class="note">Tip: <b>tan⁻¹</b> is the inverse (undo) button. Close every "(" with a ")". If you forget, the calculator closes them for you.</p>
+  </section>
 </div>
 
 <script>
@@ -424,7 +456,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
   const near = (a, b, tol) => Math.abs(a - b) <= tol;
   let mode = 1, score = 0;
   const m1 = { h: 0, d: 30, solved: false, rec: null, checks: 0, done: 0 };
-  const m2 = { h: 30, t: 40, solved: false, aimed: null };
+  const m2 = { h: 25, t: 60, solved: false, aimed: null };
 
   function el(tag, attrs, parent) {
     const e = document.createElementNS(NS, tag);
@@ -575,7 +607,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
   function updateM2Status() {
     const b = $("m2status"), r = m1.rec;
     if (!r) { b.className = "banner warnb"; b.innerHTML = "<div><b>Mission 1 is not done yet.</b> Your report will show Mission 1 as not completed. Finish it first for full points.</div><button class=\"primary\" id=\"gom1\">Go to Mission 1</button>"; $("gom1").onclick = () => setMode(1); }
-    else { b.className = "banner goodb"; b.innerHTML = `<div><b>Mission 1 saved.</b> Height ${r.v} ft, ${r.ok ? "correct" : "not correct"}, formula ${r.formulaOk ? "correct" : "not correct"}. Now finish Mission 2 and press <b>Submit both missions</b>.</div>`; }
+    else { b.className = "banner goodb"; b.innerHTML = `<div><b>Mission 1 saved.</b> Height ${r.v} ft, ${r.ok ? "correct" : "not correct"}, formula ${r.formulaOk ? "correct" : "not correct"}. Type your name in Step 4 and press <b>Submit my report</b>. Mission 2 is a bonus: do it first if you have time.</div>`; }
   }
   function checkM1() {
     const fb = $("m1fb");
@@ -671,14 +703,35 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     sin: "θ = sin⁻¹(height ÷ distance)", flip: "θ = tan⁻¹(distance ÷ height)",
     tan: "θ = tan⁻¹(height ÷ distance)", cos: "θ = cos⁻¹(height ÷ distance)"
   };
+  function showReport(lines) {
+    $("m2reporttext").textContent = lines.join("\n");
+    $("m2copymsg").textContent = "";
+    $("m2report").hidden = false;
+    $("m2report").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
   function checkM2() {
     const fb = $("m2fb");
     const name = $("m2name").value.trim();
     const pick = document.querySelector('input[name="m2f"]:checked');
     const v = parseFloat($("m2ans").value);
+    const tried2 = !!pick || !isNaN(v);
     if (!name) { fb.className = "feedback warn"; fb.textContent = "Type your name first, so Ms. K knows whose report it is."; $("m2name").focus(); return; }
-    if (!pick) { fb.className = "feedback warn"; fb.textContent = "Pick a formula in Step 2 first."; return; }
-    if (isNaN(v)) { fb.className = "feedback warn"; fb.textContent = "Type your angle in degrees, then press Submit."; $("m2ans").focus(); return; }
+    if (!tried2 && !m1.rec) { fb.className = "feedback warn"; fb.textContent = "Do Mission 1 first. Then come back here and press Submit."; return; }
+    if (pick && isNaN(v)) { fb.className = "feedback warn"; fb.textContent = "Type your angle in degrees, or clear your formula choice to submit Mission 1 only."; $("m2ans").focus(); return; }
+    if (!pick && !isNaN(v)) { fb.className = "feedback warn"; fb.textContent = "Pick a formula in Step 2 first."; return; }
+    const when = new Date().toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+    const head = ["DRONE TRIG LAB: MISSION REPORT", "Name: " + name, "Submitted: " + when, "", ...m1Lines(), ""];
+
+    if (!tried2) {
+      fb.className = "feedback good";
+      fb.innerHTML = "<b>Report ready!</b> Mission 2 was skipped. That's OK: it is a bonus. Copy your report below.";
+      showReport([...head,
+        "MISSION 2 (BONUS): not attempted",
+        "",
+        "SCORE: Mission 1 " + m1Pts() + " / 3    Mission 2 bonus 0 / 3"]);
+      return;
+    }
+
     m2.attempts = (m2.attempts || 0) + 1;
     const T = m2True();
     const formulaOk = pick.value === "tan";
@@ -703,34 +756,22 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       else if (near(v, Math.atan(m2.h / m2.t), 0.05)) msg += "Your calculator is probably in radians. Switch Desmos to Degrees. ";
       else if (v > T) msg += "Use a smaller angle. ";
       else msg += "Use a bigger angle. ";
-      msg += "Fix it and submit again.";
+      msg += "You can fix it and submit again.";
     }
-    if (!isNaN(dist)) msg += bonusOk ? ` <b>Bonus correct!</b>` : ` Bonus distance is off: use √(height² + distance²).`;
+    if (!isNaN(dist)) msg += bonusOk ? ` <b>Extra bonus correct!</b>` : ` Extra bonus distance is off: use √(height² + distance²).`;
     fb.innerHTML = msg;
     render();
 
     const pts = (formulaOk ? 1 : 0) + (hit ? 2 : 0);
-    const when = new Date().toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
-    const lines = [
-      "DRONE TRIG LAB: MISSION REPORT",
-      "Name: " + name,
-      "Submitted: " + when,
-      "",
-      ...m1Lines(),
-      "",
-      "MISSION 2: AIM THE CAMERA",
+    showReport([...head,
+      "MISSION 2 (BONUS): AIM THE CAMERA",
       "Drone height: " + m2.h + " ft    Target distance: " + m2.t + " ft",
       "Formula: " + FORMULAS[pick.value] + (formulaOk ? "   CORRECT" : "   NOT CORRECT"),
       "My angle of depression: " + v + "°   " + (hit ? "HIT (exact " + r1(T) + "°)" : "MISS"),
-      "Bonus distance: " + (isNaN(dist) ? "not answered" : dist + " ft   " + (bonusOk ? "CORRECT" : "NOT CORRECT")),
+      "Extra bonus distance: " + (isNaN(dist) ? "not answered" : dist + " ft   " + (bonusOk ? "CORRECT" : "NOT CORRECT")),
       "Attempts: " + m2.attempts,
-      "Mission 2 score: " + pts + " / 3" + (bonusOk ? "  + 1 bonus" : ""),
       "",
-      "TOTAL SCORE: " + (pts + m1Pts()) + " / 6" + (bonusOk ? "  + 1 bonus" : "")
-    ];
-    $("m2reporttext").textContent = lines.join("\n");
-    $("m2copymsg").textContent = "";
-    $("m2report").hidden = false;
+      "SCORE: Mission 1 " + m1Pts() + " / 3    Mission 2 bonus " + pts + " / 3" + (bonusOk ? "  + 1 extra" : "")]);
   }
   function copyReport() {
     const txt = $("m2reporttext").textContent;
@@ -823,5 +864,122 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
   setMode(start);
 })();
 </script>
+<script>
+(function () {
+  const input = document.getElementById("calcIn"), out = document.getElementById("calcOut"), keysBox = document.getElementById("calcKeys");
+  let ans = 0, pos = null;
+  const KEYS = [
+    ["sin", "sin(", "trig"], ["cos", "cos(", "trig"], ["tan", "tan(", "trig"], ["sin⁻¹", "sin⁻¹(", "trig"], ["cos⁻¹", "cos⁻¹(", "trig"], ["tan⁻¹", "tan⁻¹(", "trig"],
+    ["7", "7"], ["8", "8"], ["9", "9"], ["÷", " ÷ ", "op"], ["(", "("], [")", ")"],
+    ["4", "4"], ["5", "5"], ["6", "6"], ["×", " × ", "op"], ["√", "√(", "op"], ["x²", "²", "op"],
+    ["1", "1"], ["2", "2"], ["3", "3"], ["−", " − ", "op"], ["π", "π", "op"], ["⌫", "BACK", "ctl"],
+    ["0", "0"], [".", "."], ["ans", "ans", "ctl"], ["+", " + ", "op"], ["C", "CLEAR", "ctl"], ["=", "EQ", "eq"]
+  ];
+  const LABELS = { "⌫": "Backspace", "C": "Clear", "=": "Equals", "÷": "Divide", "×": "Times", "−": "Minus", "x²": "Squared", "√": "Square root", "ans": "Last answer" };
+  KEYS.forEach(([label, val, cls]) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "key" + (cls ? " " + cls : ""); b.textContent = label;
+    if (LABELS[label]) b.setAttribute("aria-label", LABELS[label]);
+    b.addEventListener("click", () => press(val));
+    keysBox.appendChild(b);
+  });
+  const remember = () => { pos = input.selectionStart; };
+  ["keyup", "click", "select", "input"].forEach(ev => input.addEventListener(ev, remember));
+  input.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); calc(); } });
+  input.addEventListener("focus", () => { input.setAttribute("inputmode", "text"); });
+
+  const CHUNKS = ["sin⁻¹(", "cos⁻¹(", "tan⁻¹(", "sin(", "cos(", "tan(", "√(", "ans", " ÷ ", " × ", " − ", " + "];
+  function press(val) {
+    let v = input.value, p = pos == null || pos > v.length ? v.length : pos;
+    if (val === "CLEAR") { input.value = ""; pos = 0; show('<span class="muted">Your answer shows here.</span>'); return; }
+    if (val === "EQ") { calc(); return; }
+    if (val === "BACK") {
+      if (p === 0) return;
+      const before = v.slice(0, p);
+      const chunk = CHUNKS.find(c => before.endsWith(c));
+      const n = chunk ? chunk.length : 1;
+      input.value = v.slice(0, p - n) + v.slice(p); pos = p - n; return;
+    }
+    input.value = v.slice(0, p) + val + v.slice(p); pos = p + val.length;
+  }
+  function show(h) { out.innerHTML = h; }
+  const fmt = x => { const r = Math.round(x * 1e6) / 1e6; return String(Object.is(r, -0) ? 0 : r); };
+
+  function calc() {
+    const src = input.value.trim();
+    if (!src) { show('<span class="err">Type a problem first.</span>'); return; }
+    try {
+      const x = evaluate(src);
+      ans = x;
+      const tenth = (Math.round(x * 10) / 10).toFixed(1);
+      show(`<span class="res">= ${fmt(x)}</span><span class="tenth">Nearest tenth: ${tenth}</span>`);
+    } catch (e) { show(`<span class="err">${e.message}</span>`); }
+  }
+
+  function evaluate(str) {
+    let s = str.replace(/×/g, "*").replace(/÷/g, "/").replace(/[−–]/g, "-")
+      .replace(/sin⁻¹/g, "asin").replace(/cos⁻¹/g, "acos").replace(/tan⁻¹/g, "atan")
+      .replace(/√/g, "sqrt").replace(/²/g, "^2").replace(/π/g, "pi").replace(/°/g, "")
+      .toLowerCase().replace(/arcsin/g, "asin").replace(/arccos/g, "acos").replace(/arctan/g, "atan")
+      .replace(/\s+/g, "");
+    const opens = (s.match(/\(/g) || []).length, closes = (s.match(/\)/g) || []).length;
+    if (closes > opens) throw new Error("There is an extra \")\". Check your parentheses.");
+    s += ")".repeat(opens - closes);
+    const toks = [];
+    const re = /\d*\.?\d+|[a-z]+|[-+*\/^()]/g;
+    let m, last = 0;
+    while ((m = re.exec(s))) {
+      if (m.index !== last) throw new Error("I don't understand \"" + s.slice(last, m.index) + "\".");
+      toks.push(m[0]); last = re.lastIndex;
+    }
+    if (last !== s.length) throw new Error("I don't understand \"" + s.slice(last) + "\".");
+    let i = 0;
+    const peek = () => toks[i], next = () => toks[i++];
+    const D = Math.PI / 180;
+    const FN = {
+      sin: x => Math.sin(x * D), cos: x => Math.cos(x * D),
+      tan: x => { if (Math.abs(Math.cos(x * D)) < 1e-12) throw new Error("tan(90°) is undefined. Try a different angle."); return Math.tan(x * D); },
+      asin: x => { if (x < -1 || x > 1) throw new Error("sin⁻¹ needs a number between −1 and 1. Check your fraction: opposite ÷ hypotenuse."); return Math.asin(x) / D; },
+      acos: x => { if (x < -1 || x > 1) throw new Error("cos⁻¹ needs a number between −1 and 1. Check your fraction: adjacent ÷ hypotenuse."); return Math.acos(x) / D; },
+      atan: x => Math.atan(x) / D,
+      sqrt: x => { if (x < 0) throw new Error("You can't take √ of a negative number."); return Math.sqrt(x); }
+    };
+    const startsPrimary = t => t !== undefined && (/^[\d.]/.test(t) || /^[a-z]/.test(t) || t === "(");
+    function expr() { let v = term(); while (peek() === "+" || peek() === "-") { const o = next(); const r = term(); v = o === "+" ? v + r : v - r; } return v; }
+    function term() {
+      let v = unary();
+      for (;;) {
+        if (peek() === "*" || peek() === "/") { const o = next(); const r = unary(); if (o === "/" && r === 0) throw new Error("You can't divide by 0."); v = o === "*" ? v * r : v / r; }
+        else if (startsPrimary(peek())) { v = v * unary(); }
+        else break;
+      }
+      return v;
+    }
+    function unary() { if (peek() === "-") { next(); return -unary(); } if (peek() === "+") { next(); return unary(); } return power(); }
+    function power() { const b = primary(); if (peek() === "^") { next(); return Math.pow(b, unary()); } return b; }
+    function primary() {
+      const t = next();
+      if (t === undefined) throw new Error("The problem ends too early. Add a number.");
+      if (/^[\d.]/.test(t)) return parseFloat(t);
+      if (t === "(") { const v = expr(); if (next() !== ")") throw new Error("Check your parentheses."); return v; }
+      if (t === "pi") return Math.PI;
+      if (t === "ans") return ans;
+      if (FN[t]) {
+        let a;
+        if (peek() === "(") { next(); a = expr(); if (next() !== ")") throw new Error("Check your parentheses."); }
+        else a = power();
+        return FN[t](a);
+      }
+      throw new Error("I don't know \"" + t + "\". Use the buttons.");
+    }
+    const v = expr();
+    if (i < toks.length) throw new Error("Check your problem near \"" + toks.slice(i).join("") + "\".");
+    if (!Number.isFinite(v)) throw new Error("That answer is too big. Check your numbers.");
+    return v;
+  }
+  window.__dtlEval = evaluate;
+})();
+</script>
+
 
 </body></html>
