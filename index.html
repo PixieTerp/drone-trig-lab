@@ -66,6 +66,7 @@ body {
 header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; }
 h1 { font-family: var(--display); font-weight: 700; font-size: clamp(26px, 4vw, 36px); margin: 0; letter-spacing: .01em; text-wrap: balance; }
 .sub { color: var(--muted); margin: 2px 0 0; }
+.ver { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .badge { font-family: var(--display); font-weight: 600; font-size: 14px; background: var(--hud-soft); color: var(--hud); padding: 6px 12px; border-radius: 999px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
 .tab {
@@ -200,6 +201,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       <p class="sub">Ms. K's flight deck. Calculator in <b>DEG</b> mode, please.</p>
     </div>
     <span class="badge" id="score">Missions completed: 0</span>
+    <span class="ver" title="Version of this page">v20</span>
   </header>
 
   <div class="tabs" role="tablist" aria-label="Missions">
@@ -668,19 +670,20 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
   }
   function renderM2(g) {
     const dy = GROUND - m2.h * S, xt = XD - m2.t * S;
-    drawCone(g, XD);
     drawTarget(g, xt);
-    el("line", { x1: XD, y1: GROUND - 22, x2: XD, y2: dy + 12, stroke: "var(--muted)", "stroke-width": 2, "stroke-dasharray": "3 5" }, g);
+    el("rect", { x: XD - 4, y: GROUND - 3, width: 8, height: 3, rx: 1, fill: "var(--muted)" }, g);
+    el("line", { x1: XD, y1: GROUND - 3, x2: XD, y2: dy + 12, stroke: "var(--muted)", "stroke-width": 2, "stroke-dasharray": "3 5" }, g);
     label(g, XD + 32, (dy + GROUND) / 2, m2.h + " ft", "var(--ink)");
     el("line", { x1: XD - 26, y1: dy, x2: Math.max(10, xt - 30), y2: dy, stroke: "var(--muted)", "stroke-width": 1.5, "stroke-dasharray": "6 5" }, g);
-    text(Math.max(40, xt - 10), dy - 8, "horizontal", { "text-anchor": "middle", fill: "var(--muted)", "font-size": 12 }, g);
-    // distance bracket
-    el("line", { x1: xt, y1: 390, x2: XD, y2: 390, stroke: "var(--ink)", "stroke-width": 1.5 }, g);
-    el("line", { x1: xt, y1: 384, x2: xt, y2: 396, stroke: "var(--ink)", "stroke-width": 1.5 }, g);
-    el("line", { x1: XD, y1: 384, x2: XD, y2: 396, stroke: "var(--ink)", "stroke-width": 1.5 }, g);
-    const bx = (xt + XD) / 2;
-    el("rect", { x: bx - 26, y: 381, width: 52, height: 18, rx: 4, fill: "var(--sky-bot)" }, g);
-    text(bx, 395, m2.t + " ft", { "text-anchor": "middle", fill: "var(--ink)", "font-size": 13 }, g);
+    if (m2.t >= 40) text(Math.max(10, xt - 30), dy - 8, "horizontal", { "text-anchor": "start", fill: "var(--muted)", "font-size": 12 }, g);
+    // line of sight from the drone camera to the target
+    el("line", { x1: XD, y1: dy, x2: xt, y2: GROUND, stroke: "var(--hyp)", "stroke-width": 2.5, "stroke-dasharray": "8 6" }, g);
+    text(XD - 44, dy - 10, "angle of depression", { "text-anchor": "end", fill: "var(--hud)", "font-size": 14 }, g);
+    if (m2.t >= 30) {
+      const ta = m2True();
+      arc(g, xt, GROUND - 1, 34, 0, -ta);
+      text(xt + 50 * Math.cos(rad(ta / 2)), GROUND - 1 - 50 * Math.sin(rad(ta / 2)) + 5, "θ", { "text-anchor": "middle", fill: "var(--hud)", "font-size": 15 }, g);
+    }
 
     const show = m2.aimed;
     const a = show != null ? show : null;
@@ -693,8 +696,8 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       label(g, XD - 72 * Math.cos(rad(a / 2)), dy + 72 * Math.sin(rad(a / 2)) + 5, r1(a) + "°", m2.solved ? "var(--good)" : "var(--warn)");
       if (m2.solved) label(g, (XD + xt) / 2 + 10, (dy + GROUND) / 2 - 14, r1(Math.hypot(m2.h, m2.t)) + " ft", "var(--good)");
     } else {
-      arc(g, XD, dy, 50, 180, 180 - m2True());
-      label(g, XD - 74 * Math.cos(rad(m2True() / 2)), dy + 74 * Math.sin(rad(m2True() / 2)) + 5, "θ = ?", "var(--hud)");
+      arc(g, XD, dy, 70, 180, 180 - m2True());
+      label(g, XD - 100 * Math.cos(rad(m2True() / 2)), dy + 100 * Math.sin(rad(m2True() / 2)) + 6, "θ = ?", "var(--hud)");
     }
     drawDrone(g, XD, dy);
     $("m2hint").innerHTML = `The height (${m2.h} ft) is opposite θ. The ground distance (${m2.t} ft) is adjacent.<br>Which trig ratio is opposite ÷ adjacent? Use its inverse to find θ.<br>Bonus: √(height² + distance²)`;
